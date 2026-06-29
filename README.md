@@ -15,7 +15,7 @@
 다음 도구가 설치되어 있어야 합니다.
 
 - Conan 2.x
-- CMake 3.23 이상
+- CMake 3.21 이상
 - GCC 11 이상 또는 호환되는 C++17 컴파일러
 - make 또는 Ninja
 - Python 3
@@ -60,7 +60,7 @@ conan install . --build=missing -s build_type=Release -s compiler.cppstd=gnu17
 conan install . --build=missing -s build_type=Debug -s compiler.cppstd=gnu17
 ```
 
-이 단계가 끝나면 [oss/build/Release](build/Release) 또는 [oss/build/Debug](build/Debug) 아래에 Conan 생성 파일이 만들어집니다.
+이 단계가 끝나면 [build/Release](build/Release) 또는 [build/Debug](build/Debug) 아래에 Conan 생성 파일이 만들어집니다.
 
 ## 5. Release 빌드
 
@@ -71,7 +71,7 @@ cmake --preset conan-release
 cmake --build --preset conan-release -j$(nproc)
 ```
 
-빌드 결과물은 [oss/build/Release/bin](build/Release/bin) 아래에 생성됩니다.
+빌드 결과물은 [build/Release/bin](build/Release/bin) 아래에 생성됩니다.
 
 ## 6. Debug 빌드
 
@@ -85,7 +85,7 @@ cmake -S . -B build/Debug \
 cmake --build build/Debug -j$(nproc)
 ```
 
-빌드 결과물은 [oss/build/Debug/bin](build/Debug/bin) 아래에 생성됩니다.
+빌드 결과물은 [build/Debug/bin](build/Debug/bin) 아래에 생성됩니다.
 
 ## 7. 실행 방법
 
@@ -135,7 +135,7 @@ cmake --install build/Release
 cmake --install build/Debug
 ```
 
-설치된 실행 파일은 [oss/bin](bin) 아래에 생성됩니다.
+설치된 실행 파일은 [bin](bin) 아래에 생성됩니다.
 
 ## 9. 테스트 실행(선택)
 
@@ -146,5 +146,4 @@ ctest --test-dir build/Release --output-on-failure
 ```bash
 ctest --test-dir build/Debug --output-on-failure
 ```
-
 

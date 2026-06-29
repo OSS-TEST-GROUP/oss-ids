@@ -87,7 +87,7 @@ add_subdirectory(SecurityManager)
 add_subdirectory(SecurityClient)
 
 install(FILES
-    oss/policy_rule/config_dds_v0.9.json
-    oss/policy_rule/config_dds_v1.0.json
+    policy_rule/config_dds_v0.9.json
+    policy_rule/config_dds_v1.0.json
     DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

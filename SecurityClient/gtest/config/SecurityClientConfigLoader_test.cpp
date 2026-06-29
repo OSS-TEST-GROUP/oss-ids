@@ -50,8 +50,9 @@ TEST(SecurityClientConfigLoaderTest, RejectsMissingRuntimeFile)
     SecurityClientConfigLoader loader;
     SecurityClientConfig config;
 
-    EXPECT_FALSE(
-        loader.load("/tmp/does-not-exist-runtime.json", "oss/SecurityClient/config/sample_policy_config.json", config));
+    EXPECT_FALSE(loader.load("/tmp/does-not-exist-runtime.json",
+                             std::filesystem::path(__FILE__).parent_path() / "../../config/sample_policy_config.json",
+                             config));
 }
 
 TEST(SecurityClientConfigLoaderTest, RejectsInvalidDetectorType)

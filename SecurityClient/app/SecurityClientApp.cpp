@@ -40,8 +40,11 @@ std::filesystem::path resolveConfigPath(const std::filesystem::path& candidate)
     const std::vector<std::filesystem::path> searchRoots = {
         repoRoot,
         std::filesystem::current_path(),
+        std::filesystem::current_path() / "bin",
         std::filesystem::current_path() / "..",
+        std::filesystem::current_path() / "../bin",
         std::filesystem::current_path() / "../..",
+        std::filesystem::current_path() / "../../bin",
     };
 
     for (const auto& root : searchRoots)

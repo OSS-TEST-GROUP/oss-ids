@@ -29,8 +29,8 @@ TEST(SecurityClientAppTest, ConfigureAndRunUseSampleFixtures)
 
     AppLaunchOptions options;
     options.clientId = "sc-test";
-    options.runtimeConfigPath = "oss/SecurityClient/config/sample_runtime_config.json";
-    options.policyConfigPath = "oss/SecurityClient/config/sample_policy_config.json";
+    options.runtimeConfigPath = "SecurityClient/config/sample_runtime_config.json";
+    options.policyConfigPath = "SecurityClient/config/sample_policy_config.json";
     options.logLevel = "info";
     options.singlePass = true;
 

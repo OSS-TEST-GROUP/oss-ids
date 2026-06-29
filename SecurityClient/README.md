@@ -1,10 +1,10 @@
 # SecurityClient
 
-이 디렉터리는 기존의 `oss/security_client` 와 분리된, 단계형(staged) IDS 재구성 경로를 담고 있습니다.
+이 디렉터리는 `SecurityClient` 실행 파일을 구성하는 단계형(staged) IDS 구현 경로를 담고 있습니다.
 
 ## 1. 이 디렉터리의 목적
 
-- 기존 구현을 건드리지 않고, `collection / analysis / alert` 3단계 구조를 별도 경로에서 검증한다.
+- `collection / analysis / alert` 3단계 구조를 분리해 검증한다.
 - DDS 수집, 탐지 로직, 경고 발행을 독립적인 stage로 분리한다.
 - JSON 기반 runtime 설정과 policy 설정을 실제로 읽고, 테스트로 검증한다.
 - 향후 `ClientState` 중심의 단일 구현을 대체할 수 있는 기반을 마련한다.
@@ -51,37 +51,20 @@
 - 각 stage별 회귀 테스트와 운영성 테스트를 분리해 두었습니다.
 - `config`, `collection`, `analysis`, `alert`, `app` 테스트가 일부 구현되어 있고, `integration`은 향후 확장 영역입니다.
 
-## 4. 기존 실행 방식과 staged 실행 방식 비교
+## 4. 실행 방식
 
-이 경로는 기존 `oss/security_client` 구현과 분리되어 있지만, 이전 명령 스타일과 설정 의미를 함께 이해할 수 있도록 아래처럼 정리해 두는 것이 좋습니다.
+현재 실행 파일은 `SecurityClient`입니다. runtime 설정과 policy 설정을 분리해서 읽고, CLI 옵션으로 일부 값을 덮어쓸 수 있습니다.
 
-### 4.1 기존(legacy) 실행 예시
-
-기존 구현은 다음처럼 실행합니다.
-
-```sh
-cd build/Debug
-./bin/security_client -i 0 -d 0 -c policy_rule/config_dds_v1.0.json
-```
-
-- `-i 0`: 클라이언트 식별자(legacy CLI에서 사용하는 문자열형 값)
-- `-d 0`: DetectionReport 발행용 DDS 도메인 ID
-- `-c policy_rule/config_dds_v1.0.json`: legacy 정책 파일 경로
-
-이 명령은 `oss/security_client` 쪽의 기존 정책 파서와 DDS 모니터링 경로를 그대로 사용합니다.
-
-### 4.2 staged 경로에서의 비교 실행 예시
-
-staged 경로의 현재 실행 파일은 `SecurityClient`입니다. 가장 간단한 실행은 다음과 같습니다.
+### 4.1 기본 실행 예시
 
 ```sh
 cd build/Debug
 ./bin/SecurityClient -i security-client-v2
 ```
 
-이 명령은 기본값으로 `oss/SecurityClient/config/sample_runtime_config.json` 과 `oss/SecurityClient/config/sample_policy_config.json` 을 읽습니다.
+이 명령은 기본값으로 `sample_runtime_config.json` 과 `sample_policy_config.json` 을 찾습니다. CMake configure 단계에서 두 파일은 `build/<type>/bin` 아래로 복사됩니다.
 
-기존 legacy 실행과 가장 비슷하게 policy 파일을 넘기려면 다음처럼 실행합니다.
+policy 파일을 명시하려면 다음처럼 실행합니다.
 
 ```sh
 cd build/Debug
@@ -90,31 +73,31 @@ cd build/Debug
 
 이제 `-c` 옵션은 staged 경로에서도 policy 파일 경로로 해석됩니다. 즉 위 명령은 다음 조합으로 동작합니다.
 
-- runtime 설정: `oss/SecurityClient/config/sample_runtime_config.json`
+- runtime 설정: `sample_runtime_config.json`
 - policy 설정: `policy_rule/config_dds_v1.0.json`
 
 runtime 설정 파일까지 바꾸고 싶다면 `-r` 또는 `--runtime-config` 옵션을 함께 사용합니다.
 
 ```sh
 cd build/Debug
-./bin/SecurityClient -i security-client-v2 -d 0 -c policy_rule/config_dds_v1.0.json -r oss/SecurityClient/config/sample_runtime_config.json
+./bin/SecurityClient -i security-client-v2 -d 0 -c policy_rule/config_dds_v1.0.json -r SecurityClient/config/sample_runtime_config.json
 ```
 
-현재 구현은 legacy와 동일한 내부 구조는 아니지만, 적어도 `-c` 의미와 DetectionReport publisher 유지 동작은 legacy 쪽에 더 가깝게 맞추는 방향으로 수정 중입니다.
+`-i` 는 클라이언트 식별자, `-d` 는 DetectionReport 발행용 DDS 도메인 ID, `-c` 는 policy 설정 파일, `-r` 은 runtime 설정 파일입니다.
 
-### 4.3 설정 파일 의미 정리
+### 4.2 설정 파일 의미 정리
 
-| 목적 | 기존 구현 | staged 구현 |
-| --- | --- | --- |
-| 런타임/시스템 설정 | legacy 정책 파일 내부 의미에 함께 포함 | 기본값은 `oss/SecurityClient/config/sample_runtime_config.json`, 필요 시 `-r`로 override |
-| 정책 규칙 데이터 | `-c policy_rule/config_dds_v1.0.json` | `-c policy_rule/config_dds_v1.0.json` 또는 staged policy 파일 |
-| DetectionReport 발행 도메인 | `-d` 옵션으로 지정 | `-d` 옵션으로 sink domain override |
+| 목적 | 설정 방식 |
+| --- | --- |
+| 런타임/시스템 설정 | 기본값은 `sample_runtime_config.json`, 필요 시 `-r`로 override |
+| 정책 규칙 데이터 | `-c policy_rule/config_dds_v1.0.json` 또는 `-c SecurityClient/config/sample_policy_config.json` |
+| DetectionReport 발행 도메인 | `-d` 옵션으로 sink domain override |
 
-즉, legacy 실행은 “정책 파일 하나로 전체 동작을 설명”하는 구조이고, staged 실행은 “runtime 설정 + policy 설정을 분리한 구성”이다. 다만 최신 staged 구현에서는 legacy 사용성을 맞추기 위해 `-c` 와 `-d` 의 의미를 legacy 쪽에 가깝게 다시 맞추고 있다.
+즉, 현재 구현은 “runtime 설정 + policy 설정을 분리한 구성”입니다.
 
-### 4.4 security_manager 연동 확인 예시
+### 4.3 SecurityManager 연동 확인 예시
 
-현재 수정된 staged 경로는 아래 순서로 `security_manager` 와 DetectionReport publisher match를 확인할 수 있다.
+아래 순서로 `SecurityManager` 와 DetectionReport publisher match를 확인할 수 있습니다.
 
 ```sh
 cd build/Debug
@@ -125,19 +108,19 @@ cd build/Debug
 
 ```sh
 cd build/Debug
-./bin/security_manager -s 0 -d 0
+./bin/SecurityManager -s 0 -d 0
 ```
 
 확인 포인트:
 
 - `SecurityClient` 는 즉시 종료하지 않고 collector / sink를 유지한다.
-- `security_manager` 는 `matched publisher: topic=DetectionReport` 로그를 출력해야 한다.
+- `SecurityManager` 는 `matched publisher: topic=DetectionReport` 로그를 출력해야 한다.
 
 이는 “publisher가 떠 있고 security_manager가 이를 DDS에서 인식한다”는 수준까지는 연동이 복구되었음을 뜻한다.
 
 ## 5. 빌드와 실행
 
-이 경로는 아직 `oss/CMakeLists.txt`에 기본 연결되지 않은 별도 구현 경로입니다. 따라서 직접 타깃을 빌드해서 검증합니다.
+이 경로는 최상위 CMake에 연결되어 있으므로 직접 타깃을 빌드해서 검증할 수 있습니다.
 
 ### 빌드
 
@@ -181,7 +164,7 @@ ctest --output-on-failure -R SecurityClientTest --verbose
 
 ## 7. 개발 시 주의점
 
-- 기존의 `oss/security_client` 구현은 그대로 두고, 이 경로는 별도로 검증합니다.
+- 새로운 변경은 단계별 경계와 lifecycle을 기준으로 검증합니다.
 - 새로운 detector나 sink를 추가할 때는 반드시 `gtest`로 실패/정상 경로를 함께 검증합니다.
 - `SecurityClientApp`의 lifecycle 순서(`configure -> initialize -> run -> stop -> finalize`)를 깨지 않도록 유의합니다.
 - 운영성 강화는 단순히 “동작함”만 확인하는 것이 아니라, 잘못된 config나 실패 시나리오도 검증해야 합니다.
