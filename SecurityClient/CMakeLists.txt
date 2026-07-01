@@ -90,4 +90,6 @@ if(BUILD_TESTING)
     )
 
     add_test(NAME SecurityClientTest COMMAND SecurityClient_test)
+    set_tests_properties(SecurityClientTest PROPERTIES
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endif()
