@@ -62,13 +62,21 @@ conan install . --build=missing -s build_type=Debug -s compiler.cppstd=gnu17
 
 이 단계가 끝나면 [build/Release](build/Release) 또는 [build/Debug](build/Debug) 아래에 Conan 생성 파일이 만들어집니다.
 
+### 컴파일 환경 설정
+```
+source build/Release/generators/conanbuild.sh
+```
+```
+source build/Debug/generators/conanbuild.sh
+```
+
 ## 5. Release 빌드
 
 Release 빌드는 다음 순서로 진행합니다.
 
 ```bash
 cmake --preset conan-release
-cmake --build --preset conan-release -j$(nproc)
+cmake --build --preset conan-release
 ```
 
 빌드 결과물은 [build/Release/bin](build/Release/bin) 아래에 생성됩니다.
@@ -78,11 +86,8 @@ cmake --build --preset conan-release -j$(nproc)
 Debug 빌드는 다음처럼 진행합니다.
 
 ```bash
-cmake -S . -B build/Debug \
-  -DCMAKE_TOOLCHAIN_FILE=build/Debug/generators/conan_toolchain.cmake \
-  -DCMAKE_BUILD_TYPE=Debug
-
-cmake --build build/Debug -j$(nproc)
+cmake --preset conan-debug
+cmake --build --preset conan-debug
 ```
 
 빌드 결과물은 [build/Debug/bin](build/Debug/bin) 아래에 생성됩니다.

@@ -33,6 +33,7 @@ class DdsIdsRecipe(ConanFile):
 
     def build_requirements(self):
         self.tool_requires("fast-dds-gen/4.2.0")
+        self.tool_requires("cmake/4.3.3")
 
     def validate(self):
         check_min_cppstd(self, 17)
