@@ -48,9 +48,11 @@ jobs:
           mkdir -p "${STAGE}/bin" "${STAGE}/etc"
 
           for BIN in SecurityManager SecurityClient; do
-            if [ -f "build/Release/bin/${BIN}" ]; then
-              cp "build/Release/bin/${BIN}" "${STAGE}/bin/"
+            if [ ! -f "build/Release/bin/${BIN}" ]; then
+              echo "::error::${BIN} binary missing"
+              exit 1
             fi
+            cp "build/Release/bin/${BIN}" "${STAGE}/bin/"
           done
           cp -r policy_rule/. "${STAGE}/etc/"
 
