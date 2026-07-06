@@ -59,7 +59,7 @@ jobs:
 
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
-      - name: artifact
+      - name: Artifact
         uses: actions/upload-artifact@v4
         with:
           name: dds-ids-${{ env.VERSION }}
