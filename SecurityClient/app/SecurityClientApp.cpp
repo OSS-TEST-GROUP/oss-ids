@@ -92,7 +92,7 @@ bool SecurityClientApp::configure(const AppLaunchOptions& options)
 
     if (launchOptions_.runtimeConfigPath.empty())
     {
-        launchOptions_.runtimeConfigPath = "sample_runtime_config.json";
+        launchOptions_.runtimeConfigPath = "SecurityClient/config/sample_runtime_config.json";
     }
     if (launchOptions_.policyConfigPath.empty())
     {

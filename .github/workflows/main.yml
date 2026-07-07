@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare
+        run: |
+          pip install conan
+          conan profile detect --force
+          conan remote add oss https://gitlab.com/api/v4/projects/83664124/packages/conan --force
+          conan install . --build=missing \
+            -s build_type=Release \
+            -s compiler.cppstd=gnu17
+
+      - name: Build
+        run: |
+          cmake -S . -B build/Release \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake \
+            -DBUILD_TESTING=ON
+          cmake --build build/Release -j $(nproc)
+
+      - name: Test
+        run: |
+          mkdir -p build/Release/test-results
+          ctest --test-dir build/Release \
+            --output-on-failure \
+            --output-junit build/Release/test-results/ctest-results.xml
+
+      - name: Package
+        run: |
+          VERSION=$(git describe --tags --always 2>/dev/null || git rev-parse --short HEAD)
+          STAGE="artifacts/dds-ids_${VERSION}"
+
+          mkdir -p "${STAGE}/bin" "${STAGE}/etc"
+
+          for BIN in SecurityManager SecurityClient; do
+            if [ ! -f "build/Release/bin/${BIN}" ]; then
+              echo "::error::${BIN} binary missing"
+              exit 1
+            fi
+            cp "build/Release/bin/${BIN}" "${STAGE}/bin/"
+          done
+          cp -r policy_rule/. "${STAGE}/etc/"
+
+          tar -czf "artifacts/dds-ids_${VERSION}.tar.gz" -C artifacts "dds-ids_${VERSION}"
+          rm -rf "${STAGE}"
+
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
+      - name: Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dds-ids-${{ env.VERSION }}
+          path: artifacts/*.tar.gz
