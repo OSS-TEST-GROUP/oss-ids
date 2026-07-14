@@ -76,11 +76,13 @@ if(NOT DEFINED LOG_ACTIVE_LEVEL OR "${LOG_ACTIVE_LEVEL}" STREQUAL "")
     set(LOG_ACTIVE_LEVEL 0)
 endif()
 
+set(POLICY_RULE_DIR "${PROJECT_SOURCE_DIR}/policy_rule")
+
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config_${PROJECT_NAME}.h)
 configure_file(${CMAKE_SOURCE_DIR}/policy_rule/config_dds_v0.9.json ${CMAKE_BINARY_DIR}/bin/config_dds_v0.9.json COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/policy_rule/config_dds_v1.0.json ${CMAKE_BINARY_DIR}/bin/config_dds_v1.0.json COPYONLY)
-configure_file(${CMAKE_SOURCE_DIR}/SecurityClient/config/sample_runtime_config.json ${CMAKE_BINARY_DIR}/bin/sample_runtime_config.json COPYONLY)
-configure_file(${CMAKE_SOURCE_DIR}/SecurityClient/config/sample_policy_config.json ${CMAKE_BINARY_DIR}/bin/sample_policy_config.json COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/policy_rule/sample_runtime_config.json ${CMAKE_BINARY_DIR}/bin/runtime_config.json COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/policy_rule/sample_policy_config.json ${CMAKE_BINARY_DIR}/bin/policy_config.json COPYONLY)
 
 add_subdirectory(idl)
 add_subdirectory(SecurityManager)

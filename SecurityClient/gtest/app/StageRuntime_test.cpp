@@ -15,6 +15,7 @@
 #include "../../app/StageRuntime.hpp"
 
 #include "Log.hpp"
+#include "config_dds_ids.h"
 
 #include <filesystem>
 
@@ -34,9 +35,9 @@ TEST(StageRuntimeTest, ConfigureAndRunUseSampleFixtures)
     SecurityClientConfig config;
     AppLaunchOptions options;
 
-    const auto repoRoot = std::filesystem::path(__FILE__).parent_path().parent_path().parent_path();
-    const auto runtimeConfigPath = repoRoot / "config/sample_runtime_config.json";
-    const auto policyConfigPath = repoRoot / "config/sample_policy_config.json";
+    std::filesystem::path policyRulePath = POLICY_RULE_DIR;
+    const auto runtimeConfigPath = policyRulePath / "sample_runtime_config.json";
+    const auto policyConfigPath = policyRulePath / "sample_policy_config.json";
 
     options.clientId = "sc-stage-runtime";
     options.runtimeConfigPath = runtimeConfigPath;

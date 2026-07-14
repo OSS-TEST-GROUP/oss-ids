@@ -40,8 +40,8 @@ bool Main::defineArgs(cxxopts::Options& options)
     options.add_options()
         ("i,client-id", "Security client identifier", cxxopts::value<std::string>())
         ("d,domain", "DetectionReport domain id", cxxopts::value<int>()->default_value("0"))
-        ("c,config", "Policy config file path", cxxopts::value<std::string>()->default_value(""))
-        ("r,runtime-config", "Runtime config path", cxxopts::value<std::string>()->default_value(""));
+        ("c,config", "Policy config file path", cxxopts::value<std::string>()->default_value("policy_config.json"))
+        ("r,runtime-config", "Runtime config path", cxxopts::value<std::string>()->default_value("runtime_config.json"));
     // clang-format on
     return true;
 }
@@ -56,9 +56,8 @@ bool Main::configure(const cxxopts::ParseResult& optRes)
 
     AC::ddsIds::securityClient::AppLaunchOptions options;
     options.clientId = optRes["client-id"].as<std::string>();
-    options.logLevel = "info";
     options.detectionDomainId = optRes["domain"].as<int>();
-    if (optRes.count("config") > 0)
+    // if (optRes.count("config") > 0)
     {
         const auto policyPath = optRes["config"].as<std::string>();
         if (!policyPath.empty())
@@ -66,7 +65,7 @@ bool Main::configure(const cxxopts::ParseResult& optRes)
             options.policyConfigPath = policyPath;
         }
     }
-    if (optRes.count("runtime-config") > 0)
+    // if (optRes.count("runtime-config") > 0)
     {
         const auto runtimePath = optRes["runtime-config"].as<std::string>();
         if (!runtimePath.empty())

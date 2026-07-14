@@ -28,34 +28,6 @@ namespace securityClient {
 
 namespace {
 
-std::filesystem::path resolveConfigPath(const std::filesystem::path& candidate)
-{
-    if (candidate.empty())
-    {
-        return {};
-    }
-
-    const std::filesystem::path repoRoot =
-        std::filesystem::path(__FILE__).parent_path().parent_path().parent_path().parent_path();
-    const std::vector<std::filesystem::path> searchRoots = {
-        repoRoot,
-        std::filesystem::current_path(),
-        std::filesystem::current_path() / "..",
-        std::filesystem::current_path() / "../..",
-    };
-
-    for (const auto& root : searchRoots)
-    {
-        const auto resolved = (root / candidate).lexically_normal();
-        if (std::filesystem::exists(resolved))
-        {
-            return resolved;
-        }
-    }
-
-    return candidate;
-}
-
 void apply_launch_overrides(const AppLaunchOptions& options, SecurityClientConfig& config)
 {
     if (!options.clientId.empty())
@@ -90,17 +62,8 @@ bool SecurityClientApp::configure(const AppLaunchOptions& options)
     LOG_INF("SecurityClientApp configure: runtime={} policy={}", options.runtimeConfigPath.string(),
             options.policyConfigPath.string());
 
-    if (launchOptions_.runtimeConfigPath.empty())
-    {
-        launchOptions_.runtimeConfigPath = "SecurityClient/config/sample_runtime_config.json";
-    }
-    if (launchOptions_.policyConfigPath.empty())
-    {
-        launchOptions_.policyConfigPath = "sample_policy_config.json";
-    }
-
-    const auto runtimePath = resolveConfigPath(launchOptions_.runtimeConfigPath);
-    const auto policyPath = resolveConfigPath(launchOptions_.policyConfigPath);
+    const auto runtimePath = launchOptions_.runtimeConfigPath;
+    const auto policyPath = launchOptions_.policyConfigPath;
 
     if (!configLoader_.load(runtimePath, policyPath, config_))
     {

@@ -15,6 +15,7 @@
 #include "../../app/SecurityClientApp.hpp"
 
 #include "Log.hpp"
+#include "config_dds_ids.h"
 
 #include <gtest/gtest.h>
 
@@ -27,10 +28,11 @@ TEST(SecurityClientAppTest, ConfigureAndRunUseSampleFixtures)
 {
     SecurityClientApp app;
 
+    std::filesystem::path policyRulePath = POLICY_RULE_DIR;
     AppLaunchOptions options;
     options.clientId = "sc-test";
-    options.runtimeConfigPath = "SecurityClient/config/sample_runtime_config.json";
-    options.policyConfigPath = "SecurityClient/config/sample_policy_config.json";
+    options.runtimeConfigPath = policyRulePath / "sample_runtime_config.json";
+    options.policyConfigPath = policyRulePath / "sample_policy_config.json";
     options.logLevel = "info";
     options.singlePass = true;
 
@@ -48,7 +50,9 @@ TEST(SecurityClientAppTest, ConfigureAppliesCliOverridesToLoadedConfig)
 
     AppLaunchOptions options;
     options.clientId = "cli-security-client";
-    options.policyConfigPath = "policy_rule/config_dds_v1.0.json";
+    std::filesystem::path policyRulePath = POLICY_RULE_DIR;
+    options.runtimeConfigPath = policyRulePath / "sample_runtime_config.json";
+    options.policyConfigPath = policyRulePath / "config_dds_v1.0.json";
     options.logLevel = "debug";
     options.detectionDomainId = 7;
 

@@ -25,13 +25,11 @@ class DdsIdsRecipe(ConanFile):
         self.requires("spdlog/1.17.0")
         self.requires("libdds-ids/0.1.0")
 
-        if self.options.with_tests:
-            self.requires("gtest/1.14.0")
-
     def configure(self):
         self.options["spdlog"].external_fmt = True
 
     def build_requirements(self):
+        self.test_requires("gtest/1.14.0")
         self.tool_requires("fast-dds-gen/4.2.0")
         self.tool_requires("cmake/4.3.3")
 

@@ -15,6 +15,7 @@
 #include "../../config/SecurityClientConfigLoader.hpp"
 
 #include "Log.hpp"
+#include "config_dds_ids.h"
 
 #include <filesystem>
 #include <fstream>
@@ -28,9 +29,9 @@ using AC::ddsIds::securityClient::SecurityClientConfigLoader;
 
 TEST(SecurityClientConfigLoaderTest, LoadsRuntimeConfigAndPolicyConfig)
 {
-    const std::filesystem::path baseDir = std::filesystem::path(__FILE__).parent_path() / "../../config";
-    const std::filesystem::path runtimePath = baseDir / "sample_runtime_config.json";
-    const std::filesystem::path policyPath = baseDir / "sample_policy_config.json";
+    std::filesystem::path policyRulePath = POLICY_RULE_DIR;
+    const std::filesystem::path runtimePath = policyRulePath / "sample_runtime_config.json";
+    const std::filesystem::path policyPath = policyRulePath / "sample_policy_config.json";
 
     SecurityClientConfigLoader loader;
     SecurityClientConfig config;
@@ -51,8 +52,7 @@ TEST(SecurityClientConfigLoaderTest, RejectsMissingRuntimeFile)
     SecurityClientConfig config;
 
     EXPECT_FALSE(loader.load("/tmp/does-not-exist-runtime.json",
-                             std::filesystem::path(__FILE__).parent_path() / "../../config/sample_policy_config.json",
-                             config));
+                             std::filesystem::path(__FILE__).parent_path() / "sample_policy_config.json", config));
 }
 
 TEST(SecurityClientConfigLoaderTest, RejectsInvalidDetectorType)
@@ -73,8 +73,8 @@ TEST(SecurityClientConfigLoaderTest, RejectsInvalidDetectorType)
         })";
     }
 
-    const auto baseDir = std::filesystem::path(__FILE__).parent_path() / "../../config";
-    const auto policyPath = baseDir / "sample_policy_config.json";
+    // const auto baseDir = std::filesystem::path(__FILE__).parent_path() / "../../config";
+    const auto policyPath = "sample_policy_config.json";
 
     SecurityClientConfigLoader loader;
     SecurityClientConfig config;
@@ -111,7 +111,7 @@ TEST(SecurityClientConfigLoaderTest, RejectsInvalidSeverity)
         })";
     }
 
-    const auto runtimePath = std::filesystem::path(__FILE__).parent_path() / "../../config/sample_runtime_config.json";
+    const auto runtimePath = "sample_runtime_config.json";
 
     SecurityClientConfigLoader loader;
     SecurityClientConfig config;

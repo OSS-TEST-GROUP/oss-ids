@@ -11,7 +11,6 @@
  * For more information, please refer to the LICENSE.md file in the
  * root directory or contact contact@autocrypt.io.
  */
-
 # pragma once
 
 # define PACKAGE_DESCRIPTION_SUMMARY "@CPACK_PACKAGE_DESCRIPTION_SUMMARY@"
@@ -67,3 +66,5 @@
 # ifndef SOURCE_PATH_SIZE
 # define SOURCE_PATH_SIZE @SOURCE_PATH_SIZE@
 # endif
+
+# define  POLICY_RULE_DIR "@POLICY_RULE_DIR@"
