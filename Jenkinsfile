@@ -6,7 +6,7 @@ pipeline {
       image 'dds-ids-builder:latest'
       args '-u root'
       label ''
-      customWorkspace "/workspace/dds-ids"
+      customWorkspace "/workspace/oss-ids"
     }
   }
 
@@ -25,7 +25,7 @@ pipeline {
     CONAN_REMOTE_NAME = 'oss'
     CONAN_REMOTE_URL  = 'https://gitlab.com/api/v4/projects/83664124/packages/conan'
     TEST_RESULTS_DIR  = 'build/Release/test-results'
-    SBOM_PROJECT_ID   = 'd719306b-cd1d-4e47-81ce-6caf7e6e0afb'
+    SBOM_PROJECT_ID   = '20265abc-0766-45ae-ab0a-fbc2ec8f8bf6'
   }
 
   stages {
@@ -101,7 +101,7 @@ pipeline {
         sh '''
           set -e
           VERSION="${GIT_VERSION}"
-          STAGE="artifacts/dds-ids_${VERSION}"
+          STAGE="artifacts/oss-ids_${VERSION}"
 
           rm -rf artifacts
           mkdir -p "${STAGE}/bin" "${STAGE}/etc"
@@ -113,7 +113,7 @@ pipeline {
           done
           cp -r policy_rule/. "${STAGE}/etc/"
 
-          tar -czf "artifacts/dds-ids_${VERSION}.tar.gz" -C artifacts "dds-ids_${VERSION}"
+          tar -czf "artifacts/oss-ids_${VERSION}.tar.gz" -C artifacts "oss-ids_${VERSION}"
           rm -rf "${STAGE}"
 
           printf "BRANCH=%s\nCOMMIT=%s\nBUILD_TIME=%s\n" \
@@ -134,7 +134,7 @@ pipeline {
           script {
             sbomPython.generateAndUpload(
               projectId: env.SBOM_PROJECT_ID,
-              projectName: 'dds-ids',
+              projectName: 'oss-ids',
               version: env.SBOM_VERSION)
           }
         }
