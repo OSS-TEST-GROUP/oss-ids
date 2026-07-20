@@ -152,3 +152,18 @@ ctest --test-dir build/Release --output-on-failure
 ctest --test-dir build/Debug --output-on-failure
 ```
 
+## 10. docker test 환경 실행 (Linux/macOS 환경)
+1. cd docker
+2. 아래와 같이 github 에 로그인
+```bash
+export CR_PAT='*** GitHub PAT classic ***'
+printf '%s' "$CR_PAT" | docker login ghcr.io -u <github-user> --password-stdin
+unset CR_PAT
+```
+3. IMAGE_ARCH="$(arch=$(uname -m); case "$arch" in x86_64) echo amd64 ;; aarch64|arm64) echo arm64 ;; *) echo "$arch" ;; esac)" docker compose pull
+4. IMAGE_ARCH="$(arch=$(uname -m); case "$arch" in x86_64) echo amd64 ;; aarch64|arm64) echo arm64 ;; *) echo "$arch" ;; esac)" docker compose up -d
+5. 브라우저에서 http://host-ip:48080
+
+
+
+

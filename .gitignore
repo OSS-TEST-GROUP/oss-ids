@@ -30,5 +30,4 @@ REQ.md
 **/__pycache__/
 *.pyc
 Testing/
-docker/.env
 docker/dbg/docker-compose.yml
