@@ -152,18 +152,33 @@ ctest --test-dir build/Release --output-on-failure
 ctest --test-dir build/Debug --output-on-failure
 ```
 
-## 10. docker test 환경 실행 (Linux/macOS 환경)
-1. cd docker
-2. 아래와 같이 github 에 로그인
+## 10. OSS-IDS Docker test 환경 (For Linux/macOS)
+### 요약
+- test 환경은 세 부분으로 나뉩니다.
+  - **security_processor**: security client, security manager 를 구동한다.
+  - **attack_env**: 정상 DDS 환경을 구축하고, attack 을 수행할 수 있는 환경을 구동한다.
+  - **security_monitor**: 현재 DDS 환경을 모니터링하고, attack 을 동작/중단 할 수 있는 frontend 를 제공한다.
+- [주의] 테스트 도커 이미지는 현재 프로젝트에서 빌드된 바이너리를 포함하는 docker 빌드를 진행하지 않고, 사내 빌드환경에서 현 github 최신버전에 맞게 docker 빌드하여 push된 이미지임.
+
+### OSS-IDS Docker test 환경 구축
+- `cd docker`
+- 아래와 같이 GitHub에 로그인 (PAT 발급은 AI or googling)
 ```bash
 export CR_PAT='*** GitHub PAT classic ***'
 printf '%s' "$CR_PAT" | docker login ghcr.io -u <github-user> --password-stdin
 unset CR_PAT
 ```
-3. IMAGE_ARCH="$(arch=$(uname -m); case "$arch" in x86_64) echo amd64 ;; aarch64|arm64) echo arm64 ;; *) echo "$arch" ;; esac)" docker compose pull
-4. IMAGE_ARCH="$(arch=$(uname -m); case "$arch" in x86_64) echo amd64 ;; aarch64|arm64) echo arm64 ;; *) echo "$arch" ;; esac)" docker compose up -d
-5. 브라우저에서 http://host-ip:48080
-
-
-
-
+- 도커 이미지 pull
+```bash
+IMAGE_ARCH="$(arch=$(uname -m); case "$arch" in x86_64) echo amd64 ;; aarch64|arm64) echo arm64 ;; *) echo "$arch" ;; esac)" docker compose pull
+```
+- 도커 서비스 up
+```bash
+IMAGE_ARCH="$(arch=$(uname -m); case "$arch" in x86_64) echo amd64 ;; aarch64|arm64) echo arm64 ;; *) echo "$arch" ;; esac)" docker compose up -d
+```
+  - 만약 테스트 환경 없이 security client and manager 만 필요하다면 다음처럼 실행:
+```bash
+IMAGE_ARCH="$(arch=$(uname -m); case "$arch" in x86_64) echo amd64 ;; aarch64|arm64) echo arm64 ;; *) echo "$arch" ;; esac)" docker compose up -d security_processor
+```
+- 브라우저에서 http://host-ip:48080 접속
+![oss-ids monitor 화면](assets/oss-ids-mon.png)

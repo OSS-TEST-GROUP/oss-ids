@@ -1,10 +1,5 @@
 services:
   security_processor:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.security_processor
-      args:
-        BUILD_BIN_DIR: ${BUILD_BIN_DIR}
     image: ${REGISTRY}/${IMAGE_NAMESPACE}/security_processor:${IMAGE_TAG}-${IMAGE_ARCH}
     platform: linux/${IMAGE_ARCH}
     container_name: security_processor
@@ -13,11 +8,6 @@ services:
       - dds_net
 
   attack_env:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.attack_env
-      args:
-        BUILD_BIN_DIR: ${BUILD_BIN_DIR}
     image: ${REGISTRY}/${IMAGE_NAMESPACE}/attack_env:${IMAGE_TAG}-${IMAGE_ARCH}
     platform: linux/${IMAGE_ARCH}
     container_name: attack_env
@@ -28,11 +18,6 @@ services:
       - "45000:45000"
 
   security_monitor:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.security_monitor
-      args:
-        BUILD_BIN_DIR: ${BUILD_BIN_DIR}
     image: ${REGISTRY}/${IMAGE_NAMESPACE}/security_monitor:${IMAGE_TAG}-${IMAGE_ARCH}
     platform: linux/${IMAGE_ARCH}
     container_name: security_monitor
