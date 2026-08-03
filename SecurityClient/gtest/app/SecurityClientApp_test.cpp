@@ -28,11 +28,11 @@ TEST(SecurityClientAppTest, ConfigureAndRunUseSampleFixtures)
 {
     SecurityClientApp app;
 
-    std::filesystem::path policyRulePath = POLICY_RULE_DIR;
+    std::filesystem::path policyRulePath = std::filesystem::canonical("/proc/self/exe").parent_path();
     AppLaunchOptions options;
     options.clientId = "sc-test";
-    options.runtimeConfigPath = policyRulePath / "sample_runtime_config.json";
-    options.policyConfigPath = policyRulePath / "sample_policy_config.json";
+    options.runtimeConfigPath = policyRulePath / "runtime_config.json";
+    options.policyConfigPath = policyRulePath / "policy_config.json";
     options.logLevel = "info";
     options.singlePass = true;
 
@@ -50,8 +50,8 @@ TEST(SecurityClientAppTest, ConfigureAppliesCliOverridesToLoadedConfig)
 
     AppLaunchOptions options;
     options.clientId = "cli-security-client";
-    std::filesystem::path policyRulePath = POLICY_RULE_DIR;
-    options.runtimeConfigPath = policyRulePath / "sample_runtime_config.json";
+    std::filesystem::path policyRulePath = std::filesystem::canonical("/proc/self/exe").parent_path();
+    options.runtimeConfigPath = policyRulePath / "runtime_config.json";
     options.policyConfigPath = policyRulePath / "config_dds_v1.0.json";
     options.logLevel = "debug";
     options.detectionDomainId = 7;

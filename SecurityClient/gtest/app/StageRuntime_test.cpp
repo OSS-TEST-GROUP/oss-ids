@@ -35,9 +35,9 @@ TEST(StageRuntimeTest, ConfigureAndRunUseSampleFixtures)
     SecurityClientConfig config;
     AppLaunchOptions options;
 
-    std::filesystem::path policyRulePath = POLICY_RULE_DIR;
-    const auto runtimeConfigPath = policyRulePath / "sample_runtime_config.json";
-    const auto policyConfigPath = policyRulePath / "sample_policy_config.json";
+    std::filesystem::path policyRulePath = std::filesystem::canonical("/proc/self/exe").parent_path();
+    const auto runtimeConfigPath = policyRulePath / "runtime_config.json";
+    const auto policyConfigPath = policyRulePath / "policy_config.json";
 
     options.clientId = "sc-stage-runtime";
     options.runtimeConfigPath = runtimeConfigPath;

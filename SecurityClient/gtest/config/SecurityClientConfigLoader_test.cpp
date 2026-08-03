@@ -29,9 +29,9 @@ using AC::ddsIds::securityClient::SecurityClientConfigLoader;
 
 TEST(SecurityClientConfigLoaderTest, LoadsRuntimeConfigAndPolicyConfig)
 {
-    std::filesystem::path policyRulePath = POLICY_RULE_DIR;
-    const std::filesystem::path runtimePath = policyRulePath / "sample_runtime_config.json";
-    const std::filesystem::path policyPath = policyRulePath / "sample_policy_config.json";
+    std::filesystem::path policyRulePath = std::filesystem::canonical("/proc/self/exe").parent_path();
+    const std::filesystem::path runtimePath = policyRulePath / "runtime_config.json";
+    const std::filesystem::path policyPath = policyRulePath / "policy_config.json";
 
     SecurityClientConfigLoader loader;
     SecurityClientConfig config;
