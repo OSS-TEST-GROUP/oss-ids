@@ -29,7 +29,7 @@ namespace {
 
 constexpr unsigned int kPrimaryWriter = 1u << 0;
 constexpr auto kMatchPollInterval = std::chrono::milliseconds(100);
-constexpr auto kMatchTimeout = std::chrono::seconds(2);
+constexpr auto kMatchTimeout = std::chrono::seconds(5);
 
 std::int64_t nowMs()
 {

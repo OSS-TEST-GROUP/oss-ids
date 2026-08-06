@@ -92,14 +92,15 @@ int Main::start()
         return EXIT_FAILURE;
     }
 
-    return app_.run();
+    const int result = app_.run();
+    app_.finalize();
+    return result;
 }
 
 int Main::stop()
 {
     LOG_INF("Stopping SecurityClient scaffold");
     app_.stop();
-    app_.finalize();
     return 0;
 }
 

@@ -21,7 +21,6 @@
 #include "fastdds/dds/publisher/DataWriterListener.hpp"
 #include "fastdds/dds/subscriber/Subscriber.hpp"
 
-#include <chrono>
 #include <memory>
 
 namespace AC {
@@ -56,11 +55,6 @@ bool ManagerState::run()
         return false;
     }
 
-    if (!waitForAnyPublisher())
-    {
-        cleanup();
-        return false;
-    }
     if (!createOutputEntities())
     {
         cleanup();
@@ -140,45 +134,6 @@ bool ManagerState::createInputEntities()
 
     return true;
 }
-bool ManagerState::waitForAnyPublisher()
-{
-    LOG_INF("[SecurityManager] waiting for DetectionReport publisher(s) on domain {}\n", input_domain);
-
-    while (g_running.load())
-    {
-        bool matched_any = false;
-        for (size_t index = 0; index < topic_count; ++index)
-        {
-            auto& topic = topics[index];
-            SubscriptionMatchedStatus status {};
-            const auto rc = topic.reader->get_subscription_matched_status(status);
-            if (rc != RETCODE_OK)
-            {
-                continue;
-            }
-
-            if (status.current_count > 0)
-            {
-                if (!topic.matched)
-                {
-                    LOG_INF("[SecurityManager] matched publisher: topic={} current={} total={}\n", topic.in_name,
-                            status.current_count, status.total_count);
-                    topic.matched = true;
-                }
-                matched_any = true;
-            }
-        }
-
-        if (matched_any)
-        {
-            return true;
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-
-    return false;
-}
 bool ManagerState::createOutputEntities()
 {
     DomainParticipantQos pqos = PARTICIPANT_QOS_DEFAULT;
@@ -229,6 +184,23 @@ bool ManagerState::createOutputEntities()
 }
 void ManagerState::cleanup()
 {
+    if (waitset != nullptr)
+    {
+        for (size_t index = 0; index < topic_count; ++index)
+        {
+            auto& topic = topics[index];
+            if (topic.readcond != nullptr)
+            {
+                waitset->detach_condition(*topic.readcond);
+            }
+            if (topic.statuscond != nullptr)
+            {
+                waitset->detach_condition(*topic.statuscond);
+            }
+        }
+    }
+    waitset.reset();
+
     if (input_participant != nullptr)
     {
         input_participant->delete_contained_entities();
@@ -241,7 +213,6 @@ void ManagerState::cleanup()
         DomainParticipantFactory::get_shared_instance()->delete_participant(output_participant);
         output_participant = nullptr;
     }
-    waitset.reset();
 }
 
 void ManagerState::bridgeLoop()

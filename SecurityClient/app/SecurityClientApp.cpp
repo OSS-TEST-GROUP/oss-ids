@@ -164,6 +164,21 @@ bool SecurityClientApp::initialize()
         return false;
     }
 
+    if (worker_.joinable())
+    {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            is_running = false;
+        }
+        cv_.notify_one();
+        worker_.join();
+    }
+
+    failed_.store(false);
+    queue_.clear();
+    is_running = true;
+    worker_ = std::thread(&SecurityClientApp::workerLoop, this);
+
     initialized_ = true;
     LOG_INF("SecurityClientApp initialized successfully");
     return true;
@@ -203,15 +218,26 @@ int SecurityClientApp::run()
             return EXIT_FAILURE;
         }
 
-        if (!findings.empty() && !alertStage_.publish(findings))
+        if (!findings.empty())
         {
-            LOG_ERR("SecurityClientApp alert publish failed");
-            return EXIT_FAILURE;
+            findingCount += findings.size();
+            {
+                std::lock_guard<std::mutex> lock(mutex_);
+                queue_.push_back(std::move(findings));
+            }
+            cv_.notify_one();
         }
 
-        findingCount += findings.size();
+        if (failed_.load())
+        {
+            LOG_ERR("SecurityClientApp stopping run loop due to alert publish failure");
+            running_.store(false);
+            break;
+        }
+
         if (launchOptions_.singlePass)
         {
+            this->waitForDrain();
             break;
         }
 
@@ -219,9 +245,9 @@ int SecurityClientApp::run()
     }
 
     running_.store(false);
-    LOG_INF("SecurityClientApp run completed with {} finding(s)", findingCount);
+    LOG_INF("SecurityClientApp run completed; {} finding(s) detected (publish handled asynchronously)", findingCount);
 
-    return EXIT_SUCCESS;
+    return failed_.load() ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 void SecurityClientApp::stop()
@@ -230,10 +256,27 @@ void SecurityClientApp::stop()
     collectionStage_.stop();
     analysisStage_.stop();
     alertStage_.stop();
+
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        is_running = false;
+    }
+    cv_.notify_one();
 }
 
 void SecurityClientApp::finalize()
 {
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        is_running = false;
+    }
+    cv_.notify_one();
+    
+    if (worker_.joinable())
+    {
+        worker_.join();
+    }
+
     collectionStage_.finalize();
     analysisStage_.finalize();
     alertStage_.finalize();
@@ -246,6 +289,51 @@ void SecurityClientApp::finalize()
 const SecurityClientConfig& SecurityClientApp::config() const
 {
     return config_;
+}
+
+void SecurityClientApp::workerLoop()
+{
+    while (true)
+    {
+        std::vector<DetectionFinding> batch;
+        bool stopping = false;
+        {
+            std::unique_lock<std::mutex> lock(mutex_);
+            cv_.wait(lock, [this] { return !queue_.empty() || !is_running; });
+
+            if (queue_.empty())
+            {
+                if (!is_running)
+                {
+                    return;
+                }
+                continue;
+            }
+
+            batch = std::move(queue_.front());
+            queue_.pop_front();
+            stopping = !is_running;
+        }
+
+        if (stopping)
+        {
+            LOG_WRN("SecurityClientApp dropping {} queued finding(s) on shutdown", batch.size());
+        }
+        else if (!alertStage_.publish(batch))
+        {
+            LOG_ERR("SecurityClientApp alert publish failed");
+            failed_.store(true);
+        }
+        cv_.notify_all();
+    }
+}
+
+void SecurityClientApp::waitForDrain()
+{
+    constexpr auto kDrainTimeout = std::chrono::seconds(6);
+
+    std::unique_lock<std::mutex> lock(mutex_);
+    cv_.wait_for(lock, kDrainTimeout, [this] { return queue_.empty(); });
 }
 
 }  // namespace securityClient

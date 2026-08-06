@@ -31,6 +31,8 @@ const char* bool_text(bool value)
     return value ? "true" : "false";
 }
 
+constexpr std::int32_t kReaderHistoryDepth = 50;
+
 }  // namespace
 
 namespace AC {
@@ -170,7 +172,7 @@ bool DdsCollector::createReader()
     DataReaderQos readerQos = DATAREADER_QOS_DEFAULT;
     readerQos.reliability().kind = RELIABLE_RELIABILITY_QOS;
     readerQos.history().kind = KEEP_LAST_HISTORY_QOS;
-    readerQos.history().depth = 1;
+    readerQos.history().depth = kReaderHistoryDepth;
 
     reader_ = subscriber_->create_datareader(topic_, readerQos, nullptr, StatusMask::all());
     if (reader_ == nullptr)

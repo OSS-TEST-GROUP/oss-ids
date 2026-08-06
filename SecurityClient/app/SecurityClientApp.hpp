@@ -24,9 +24,14 @@
 #include "AnalysisDetectionStage.hpp"
 
 #include <atomic>
+#include <condition_variable>
+#include <deque>
 #include <filesystem>
+#include <mutex>
 #include <optional>
 #include <string>
+#include <thread>
+#include <vector>
 
 namespace AC {
 namespace ddsIds {
@@ -54,6 +59,9 @@ public:
     const SecurityClientConfig& config() const;
 
 private:
+    void workerLoop();
+    void waitForDrain();
+
     AppLaunchOptions launchOptions_;
     SecurityClientConfig config_;
     SecurityClientConfigLoader configLoader_;
@@ -63,6 +71,13 @@ private:
     bool configured_ {false};
     bool initialized_ {false};
     std::atomic_bool running_ {false};
+
+    std::thread worker_;
+    std::mutex mutex_;
+    std::condition_variable cv_;
+    std::deque<std::vector<DetectionFinding>> queue_;
+    bool is_running {false};
+    std::atomic_bool failed_ {false};
 };
 
 }  // namespace securityClient

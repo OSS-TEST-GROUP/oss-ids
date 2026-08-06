@@ -66,7 +66,6 @@ public:
 
 private:
     bool createInputEntities();
-    bool waitForAnyPublisher();
     bool createOutputEntities();
     void cleanup();
     void bridgeLoop();
