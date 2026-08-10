@@ -64,6 +64,7 @@ pipeline {
         sh '''
           set -e
           conan profile detect --force
+          rm -f conan.lock
           conan install . --build=missing \
             -s build_type=Release \
             -s compiler.cppstd=gnu17

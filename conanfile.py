@@ -3,8 +3,8 @@ from conan.tools.build import check_min_cppstd
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
 
 
-class DdsIdsRecipe(ConanFile):
-    name = "dds-ids"
+class OssIdsRecipe(ConanFile):
+    name = "oss-ids"
     version = "0.1"
     package_type = "application"
     settings = "os", "compiler", "build_type", "arch"
