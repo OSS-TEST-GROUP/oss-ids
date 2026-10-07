@@ -11,10 +11,39 @@
 #
 # For full details, please refer to the LICENSE.md file.
 
-set(DDS_IDS_IDL_FILES
+set(DDS_IDS_VEHICLE_IDL_FILES
+    AdvancedVehicleState.idl
     DoorSwitch.idl
     DoorUnlockLockIndicator.idl
+    autoware_vehicle_msgs/msg/ControlModeReport.idl
+    autoware_vehicle_msgs/msg/GearReport.idl
+    autoware_vehicle_msgs/msg/HazardLightsReport.idl
+    autoware_vehicle_msgs/msg/SteeringReport.idl
+    autoware_vehicle_msgs/msg/TurnIndicatorsReport.idl
+    autoware_vehicle_msgs/msg/VelocityReport.idl
+    builtin_interfaces/msg/Time.idl
+    std_msgs/msg/Header.idl
+    tier4_api_msgs/msg/DoorStatus.idl
+    tier4_vehicle_msgs/msg/ActuationStatus.idl
+    tier4_vehicle_msgs/msg/ActuationStatusStamped.idl
+)
+
+set(DDS_IDS_DETECTION_IDL_FILES
     detectionReport.idl
+)
+
+set(DDS_IDS_IDL_FILES
+    ${DDS_IDS_VEHICLE_IDL_FILES}
+    ${DDS_IDS_DETECTION_IDL_FILES}
+)
+
+set(DDS_IDS_BROKEN_TYPEOBJECT_IDL_FILES
+    builtin_interfaces/msg/Time.idl
+    std_msgs/msg/Header.idl
+)
+
+set(DDS_IDS_TYPEOBJECT_SHIM_SOURCE
+    "${CMAKE_CURRENT_SOURCE_DIR}/type_object_support_shims.cxx"
 )
 
 set(DDS_IDS_FASTDDSGEN_STAMP_DIR "${CMAKE_BINARY_DIR}/idl_codegen")
@@ -45,18 +74,19 @@ else()
 
     foreach(_idl ${DDS_IDS_IDL_FILES})
         get_filename_component(_base "${_idl}" NAME_WE)
-        set(_stamp "${DDS_IDS_FASTDDSGEN_STAMP_DIR}/${_base}.stamp")
+        string(REPLACE "/" "_" _idl_key "${_idl}")
+        set(_stamp "${DDS_IDS_FASTDDSGEN_STAMP_DIR}/${_idl_key}.stamp")
         add_custom_command(
             OUTPUT "${_stamp}"
             COMMAND ${CMAKE_COMMAND} -E make_directory "${DDS_IDS_TYPE_DIR}"
-            COMMAND ${FASTDDSGEN_EXE} -d "${DDS_IDS_TYPE_DIR}" "${_idl}"
+            COMMAND ${FASTDDSGEN_EXE} -I "${CMAKE_CURRENT_SOURCE_DIR}" -d "${DDS_IDS_TYPE_DIR}" "${_idl}"
             COMMAND ${CMAKE_COMMAND} -E touch "${_stamp}"
             DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${_idl}" "${FASTDDSGEN_EXE}"
             WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
             COMMENT "fastddsgen: Generating types from ${_idl}"
             VERBATIM
         )
-        message(STATUS "add custom command: ${FASTDDSGEN_EXE} -d ${DDS_IDS_TYPE_DIR} ${_idl}")
+        message(STATUS "add custom command: ${FASTDDSGEN_EXE} -I ${CMAKE_CURRENT_SOURCE_DIR} -d ${DDS_IDS_TYPE_DIR} ${_idl}")
         list(APPEND DDS_IDS_FASTDDSGEN_STAMPS "${_stamp}")
     endforeach()
 
@@ -64,17 +94,32 @@ else()
     add_custom_target(generate_idl ALL DEPENDS ${DDS_IDS_FASTDDSGEN_STAMPS})
 endif()
 
-set(DDS_IDS_VEHICLE_TYPE_SOURCES
-    "${DDS_IDS_TYPE_DIR}/DoorSwitchPubSubTypes.cxx"
-    "${DDS_IDS_TYPE_DIR}/DoorSwitchTypeObjectSupport.cxx"
-    "${DDS_IDS_TYPE_DIR}/DoorUnlockLockIndicatorPubSubTypes.cxx"
-    "${DDS_IDS_TYPE_DIR}/DoorUnlockLockIndicatorTypeObjectSupport.cxx"
-)
+function(dds_ids_collect_generated_sources out_var)
+    set(_sources)
+    foreach(_idl ${ARGN})
+        get_filename_component(_base "${_idl}" NAME_WE)
+        get_filename_component(_dir "${_idl}" DIRECTORY)
+        if(_dir STREQUAL "")
+            set(_generated_prefix "${DDS_IDS_TYPE_DIR}/${_base}")
+        else()
+            set(_generated_prefix "${DDS_IDS_TYPE_DIR}/${_dir}/${_base}")
+        endif()
+        list(APPEND _sources
+            "${_generated_prefix}PubSubTypes.cxx"
+        )
+        list(FIND DDS_IDS_BROKEN_TYPEOBJECT_IDL_FILES "${_idl}" _skip_typeobject_index)
+        if(_skip_typeobject_index EQUAL -1)
+            list(APPEND _sources
+                "${_generated_prefix}TypeObjectSupport.cxx"
+            )
+        endif()
+    endforeach()
+    set(${out_var} "${_sources}" PARENT_SCOPE)
+endfunction()
 
-set(DDS_IDS_DETECTION_TYPE_SOURCES
-    "${DDS_IDS_TYPE_DIR}/detectionReportPubSubTypes.cxx"
-    "${DDS_IDS_TYPE_DIR}/detectionReportTypeObjectSupport.cxx"
-)
+dds_ids_collect_generated_sources(DDS_IDS_VEHICLE_TYPE_SOURCES ${DDS_IDS_VEHICLE_IDL_FILES})
+list(APPEND DDS_IDS_VEHICLE_TYPE_SOURCES ${DDS_IDS_TYPEOBJECT_SHIM_SOURCE})
+dds_ids_collect_generated_sources(DDS_IDS_DETECTION_TYPE_SOURCES ${DDS_IDS_DETECTION_IDL_FILES})
 
 # Mark generated sources so CMake won't expect them to exist at configure time
 if(NOT "${DDS_IDS_VEHICLE_TYPE_SOURCES}" STREQUAL "")

@@ -1,0 +1,11 @@
+module advanced_test_env {
+  struct AdvancedVehicleState {
+    int64 event_id;
+    int64 timestamp_ms;
+    string stage;
+    string node_name;
+    string source_topic;
+    string source_type;
+    string payload_json;
+  };
+};

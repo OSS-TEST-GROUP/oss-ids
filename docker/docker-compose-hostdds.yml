@@ -1,0 +1,31 @@
+services:
+  security_processor:
+    image: ${REGISTRY}/${IMAGE_NAMESPACE}/security_processor:${IMAGE_TAG}-${IMAGE_ARCH}
+    platform: linux/${IMAGE_ARCH}
+    container_name: security_processor
+    restart: unless-stopped
+    network_mode: host
+    ipc: host
+
+  attack_env:
+    image: ${REGISTRY}/${IMAGE_NAMESPACE}/attack_env:${IMAGE_TAG}-${IMAGE_ARCH}
+    platform: linux/${IMAGE_ARCH}
+    container_name: attack_env
+    restart: unless-stopped
+    network_mode: host
+    ipc: host
+
+  security_monitor:
+    image: ${REGISTRY}/${IMAGE_NAMESPACE}/security_monitor:${IMAGE_TAG}-${IMAGE_ARCH}
+    platform: linux/${IMAGE_ARCH}
+    container_name: security_monitor
+    restart: unless-stopped
+    network_mode: host
+    ipc: host
+    volumes:
+      - monitor_db:/app/data
+    depends_on:
+      - attack_env
+
+volumes:
+  monitor_db:

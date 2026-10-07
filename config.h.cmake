@@ -67,3 +67,4 @@
 # define SOURCE_PATH_SIZE @SOURCE_PATH_SIZE@
 # endif
 
+# define  POLICY_RULE_DIR "@POLICY_RULE_DIR@"

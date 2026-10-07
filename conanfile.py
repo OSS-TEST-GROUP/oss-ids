@@ -3,9 +3,9 @@ from conan.tools.build import check_min_cppstd
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
 
 
-class OssIdsRecipe(ConanFile):
-    name = "oss-ids"
-    version = "0.1"
+class DdsIdsRecipe(ConanFile):
+    name = "dds-ids"
+    version = "0.2.0"
     package_type = "application"
     settings = "os", "compiler", "build_type", "arch"
     options = {
@@ -23,7 +23,7 @@ class OssIdsRecipe(ConanFile):
         self.requires("cxxopts/3.3.1")
         self.requires("fmt/12.1.0")
         self.requires("spdlog/1.17.0")
-        self.requires("libdds-ids/0.1.0")
+        self.requires("libdds-ids/0.2.0")
 
     def configure(self):
         self.options["spdlog"].external_fmt = True

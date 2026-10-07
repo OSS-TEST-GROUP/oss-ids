@@ -78,7 +78,7 @@ bool DdsDetectionReportSink::initialize()
     eprosima::fastdds::dds::DataWriterQos wqos = eprosima::fastdds::dds::DATAWRITER_QOS_DEFAULT;
     wqos.reliability().kind = eprosima::fastdds::dds::RELIABLE_RELIABILITY_QOS;
     wqos.history().kind = eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS;
-    wqos.history().depth = 1;
+    wqos.history().depth = 500;
 
     topic_ = participant_->create_topic(config_.topic.c_str(), typeSupport_.get_type_name(),
                                         eprosima::fastdds::dds::TOPIC_QOS_DEFAULT);

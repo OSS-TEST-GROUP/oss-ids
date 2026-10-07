@@ -40,13 +40,29 @@ namespace securityClient {
 bool DdsCollector::configure(const SourceConfig& config)
 {
     config_ = config;
-    if (config.type == "DoorSwitch_")
+    if (config.type == "DoorSwitch_" || config.type == "DoorSwitch")
     {
         sampleType_ = SampleType::door_switch;
     }
-    else if (config.type == "DoorUnlockLockIndicator_")
+    else if (config.type == "DoorUnlockLockIndicator_" || config.type == "DoorUnlockLockIndicator")
     {
         sampleType_ = SampleType::door_lock_indicator;
+    }
+    else if (config.type == "DoorStatus" || config.type == "tier4_api_msgs::msg::DoorStatus")
+    {
+        sampleType_ = SampleType::door_status;
+    }
+    else if (config.type == "GearReport" || config.type == "autoware_vehicle_msgs::msg::GearReport")
+    {
+        sampleType_ = SampleType::gear_report;
+    }
+    else if (config.type == "ControlModeReport" || config.type == "autoware_vehicle_msgs::msg::ControlModeReport")
+    {
+        sampleType_ = SampleType::control_mode_report;
+    }
+    else if (config.type == "VelocityReport" || config.type == "autoware_vehicle_msgs::msg::VelocityReport")
+    {
+        sampleType_ = SampleType::velocity_report;
     }
     else
     {
@@ -85,6 +101,13 @@ bool DdsCollector::poll(std::vector<CollectedSample>& outSamples)
 
     LOG_TRA("DdsCollector polling topic={} source={}", config_.topic, config_.id);
 
+    if (++pollCount_ % 30 == 0)
+    {
+        eprosima::fastdds::dds::SubscriptionMatchedStatus status;
+        reader_->get_subscription_matched_status(status);
+        LOG_INF("DdsCollector topic={} matched_pubs={}", config_.topic, status.current_count);
+    }
+
     eprosima::fastdds::dds::SampleInfo info;
     if (sampleType_ == SampleType::door_switch)
     {
@@ -105,6 +128,53 @@ bool DdsCollector::poll(std::vector<CollectedSample>& outSamples)
             if (info.valid_data)
             {
                 outSamples.push_back(makeDoorLockSample(sample));
+            }
+        }
+    }
+    else if (sampleType_ == SampleType::door_status)
+    {
+        tier4_api_msgs::msg::DoorStatus sample;
+        while (reader_->take_next_sample(&sample, &info) == eprosima::fastdds::dds::RETCODE_OK)
+        {
+            if (info.valid_data)
+            {
+                LOG_INF("DdsCollector received DoorStatus status={}", sample.status());
+                outSamples.push_back(makeDoorStatusSample(sample));
+            }
+        }
+    }
+    else if (sampleType_ == SampleType::gear_report)
+    {
+        autoware_vehicle_msgs::msg::GearReport sample;
+        while (reader_->take_next_sample(&sample, &info) == eprosima::fastdds::dds::RETCODE_OK)
+        {
+            if (info.valid_data)
+            {
+                LOG_INF("DdsCollector received GearReport report={}", sample.report());
+                outSamples.push_back(makeGearReportSample(sample));
+            }
+        }
+    }
+    else if (sampleType_ == SampleType::control_mode_report)
+    {
+        autoware_vehicle_msgs::msg::ControlModeReport sample;
+        while (reader_->take_next_sample(&sample, &info) == eprosima::fastdds::dds::RETCODE_OK)
+        {
+            if (info.valid_data)
+            {
+                LOG_INF("DdsCollector received ControlModeReport mode={}", sample.mode());
+                outSamples.push_back(makeControlModeSample(sample));
+            }
+        }
+    }
+    else if (sampleType_ == SampleType::velocity_report)
+    {
+        autoware_vehicle_msgs::msg::VelocityReport sample;
+        while (reader_->take_next_sample(&sample, &info) == eprosima::fastdds::dds::RETCODE_OK)
+        {
+            if (info.valid_data)
+            {
+                outSamples.push_back(makeVelocityReportSample(sample));
             }
         }
     }
@@ -148,6 +218,18 @@ bool DdsCollector::createReader()
     case SampleType::door_lock_indicator:
         typeSupport_ = TypeSupport(new sdv_vss::msg::dds_::DoorUnlockLockIndicator_PubSubType());
         break;
+    case SampleType::door_status:
+        typeSupport_ = TypeSupport(new tier4_api_msgs::msg::DoorStatusPubSubType());
+        break;
+    case SampleType::gear_report:
+        typeSupport_ = TypeSupport(new autoware_vehicle_msgs::msg::GearReportPubSubType());
+        break;
+    case SampleType::control_mode_report:
+        typeSupport_ = TypeSupport(new autoware_vehicle_msgs::msg::ControlModeReportPubSubType());
+        break;
+    case SampleType::velocity_report:
+        typeSupport_ = TypeSupport(new autoware_vehicle_msgs::msg::VelocityReportPubSubType());
+        break;
     default:
         return false;
     }
@@ -168,9 +250,9 @@ bool DdsCollector::createReader()
     }
 
     DataReaderQos readerQos = DATAREADER_QOS_DEFAULT;
-    readerQos.reliability().kind = RELIABLE_RELIABILITY_QOS;
+    readerQos.reliability().kind = BEST_EFFORT_RELIABILITY_QOS;
     readerQos.history().kind = KEEP_LAST_HISTORY_QOS;
-    readerQos.history().depth = 1;
+    readerQos.history().depth = 500;
 
     reader_ = subscriber_->create_datareader(topic_, readerQos, nullptr, StatusMask::all());
     if (reader_ == nullptr)
@@ -221,6 +303,56 @@ CollectedSample DdsCollector::makeDoorLockSample(const sdv_vss::msg::dds_::DoorU
         bool_text(sample.vehicle_cabin_door_row1_left_is_locked());
     collected.attributes["vehicle_cabin_door_row2_right_is_locked"] =
         bool_text(sample.vehicle_cabin_door_row2_right_is_locked());
+    return collected;
+}
+
+CollectedSample DdsCollector::makeDoorStatusSample(const tier4_api_msgs::msg::DoorStatus& sample) const
+{
+    CollectedSample collected;
+    collected.sourceId = config_.id;
+    collected.transport = "dds";
+    collected.topicName = config_.topic;
+    collected.typeName = config_.type;
+    collected.timestampMs = now_ms();
+    collected.attributes["status"] = std::to_string(sample.status());
+    return collected;
+}
+
+CollectedSample DdsCollector::makeGearReportSample(const autoware_vehicle_msgs::msg::GearReport& sample) const
+{
+    CollectedSample collected;
+    collected.sourceId = config_.id;
+    collected.transport = "dds";
+    collected.topicName = config_.topic;
+    collected.typeName = config_.type;
+    collected.timestampMs = now_ms();
+    collected.attributes["report"] = std::to_string(sample.report());
+    return collected;
+}
+
+CollectedSample DdsCollector::makeControlModeSample(const autoware_vehicle_msgs::msg::ControlModeReport& sample) const
+{
+    CollectedSample collected;
+    collected.sourceId = config_.id;
+    collected.transport = "dds";
+    collected.topicName = config_.topic;
+    collected.typeName = config_.type;
+    collected.timestampMs = now_ms();
+    collected.attributes["mode"] = std::to_string(sample.mode());
+    return collected;
+}
+
+CollectedSample DdsCollector::makeVelocityReportSample(const autoware_vehicle_msgs::msg::VelocityReport& sample) const
+{
+    CollectedSample collected;
+    collected.sourceId = config_.id;
+    collected.transport = "dds";
+    collected.topicName = config_.topic;
+    collected.typeName = config_.type;
+    collected.timestampMs = now_ms();
+    collected.attributes["longitudinal_velocity"] = std::to_string(sample.longitudinal_velocity());
+    collected.attributes["lateral_velocity"] = std::to_string(sample.lateral_velocity());
+    collected.attributes["heading_rate"] = std::to_string(sample.heading_rate());
     return collected;
 }
 

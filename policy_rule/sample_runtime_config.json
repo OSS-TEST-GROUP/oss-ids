@@ -31,6 +31,110 @@
                     "mode": "latest",
                     "ttl_ms": 3000
                 }
+            },
+            {
+                "id": "door_status",
+                "transport_id": "dds-default",
+                "topic": "/vehicle/status/door_status",
+                "type": "DoorStatus",
+                "cache": {
+                    "mode": "latest",
+                    "ttl_ms": 3000
+                },
+                "state_machine": {
+                    "signal": "status",
+                    "states": {
+                        "UNKNOWN": 0,
+                        "DOOR_OPENED": 1,
+                        "DOOR_CLOSED": 2,
+                        "DOOR_OPENING": 3,
+                        "DOOR_CLOSING": 4,
+                        "NOT_APPLICABLE": 5
+                    },
+                    "valid_transitions": [
+                        {"from": 0, "to": 2},
+                        {"from": 2, "to": 3},
+                        {"from": 3, "to": 1},
+                        {"from": 3, "to": 4},
+                        {"from": 1, "to": 4},
+                        {"from": 4, "to": 2},
+                        {"from": 4, "to": 3}
+                    ]
+                }
+            },
+            {
+                "id": "gear_status",
+                "transport_id": "dds-default",
+                "topic": "/vehicle/status/gear_status",
+                "type": "GearReport",
+                "cache": {
+                    "mode": "latest",
+                    "ttl_ms": 3000
+                },
+                "state_machine": {
+                    "signal": "report",
+                    "states": {
+                        "NONE": 0,
+                        "NEUTRAL": 1,
+                        "DRIVE": 2,
+                        "REVERSE": 20,
+                        "PARK": 22
+                    },
+                    "valid_transitions": [
+                        {"from": 22, "to": 1},
+                        {"from": 22, "to": 2},
+                        {"from": 22, "to": 20},
+                        {"from": 1, "to": 2},
+                        {"from": 1, "to": 20},
+                        {"from": 1, "to": 22},
+                        {"from": 2, "to": 1},
+                        {"from": 2, "to": 22},
+                        {"from": 20, "to": 1},
+                        {"from": 20, "to": 22}
+                    ]
+                }
+            },
+            {
+                "id": "control_mode",
+                "transport_id": "dds-default",
+                "topic": "/vehicle/status/control_mode",
+                "type": "ControlModeReport",
+                "cache": {
+                    "mode": "latest",
+                    "ttl_ms": 3000
+                },
+                "state_machine": {
+                    "signal": "mode",
+                    "states": {
+                        "NO_COMMAND": 0,
+                        "AUTONOMOUS": 1,
+                        "AUTONOMOUS_STEER_ONLY": 2,
+                        "AUTONOMOUS_VELOCITY_ONLY": 3,
+                        "MANUAL": 4,
+                        "DISENGAGED": 5,
+                        "NOT_READY": 6
+                    },
+                    "valid_transitions": [
+                        {"from": 6, "to": 4},
+                        {"from": 4, "to": 1},
+                        {"from": 4, "to": 2},
+                        {"from": 4, "to": 3},
+                        {"from": 4, "to": 6},
+                        {"from": 1, "to": 4},
+                        {"from": 1, "to": 5},
+                        {"from": 5, "to": 4}
+                    ]
+                }
+            },
+            {
+                "id": "velocity_status",
+                "transport_id": "dds-default",
+                "topic": "/vehicle/status/velocity_status",
+                "type": "VelocityReport",
+                "cache": {
+                    "mode": "latest",
+                    "ttl_ms": 3000
+                }
             }
         ]
     },
@@ -45,6 +149,18 @@
                     "door_lock_indicator"
                 ],
                 "policy_ref": "host_ids.door_lock_rules"
+            },
+            {
+                "id": "state_transition_detector",
+                "type": "state_transition_rule",
+                "enabled": true,
+                "inputs": [
+                    "door_status",
+                    "gear_status",
+                    "control_mode",
+                    "velocity_status"
+                ],
+                "policy_ref": "host_ids"
             }
         ]
     },

@@ -1,0 +1,105 @@
+{
+	"VERSION" : "1.1",
+	"NETWORK_IDS" : [
+		{
+			"TOPIC_NAME" : "rt/FlushHandle",
+			"CYCLE_RULE" : [
+				{
+					"HIGH" : "226",
+					"LOW" : "186",
+					"RULE_ID" : "4"
+				}
+			]
+		},
+		{
+			"TOPIC_NAME" : "COMMON",
+			"RTPS_HEADER_RULE" : [
+				{
+					"VENDOR_ID" : [
+						{
+							"CYCLONE_DDS" : "272"
+						},
+						{
+							"FAST_DDS" : "271"
+						}
+					],
+					"RULE_ID" : "3"
+				}
+			]
+		}
+	],
+	"HOST_IDS" : [
+		{
+			"TOPIC_NAME" : "rt/DoorUnlockLockIndicator",
+			"CUSTOM_RULE" : [
+				{
+					"SIGNAL" : "vehicle_cabin_door_row1_left_is_locked",
+					"SIGNAL_RULE" : "TRUE",
+					"COMPARE_TOPIC" : "rt/DoorSwitch",
+					"COMPARE_SIGNAL" : "vehicle_sm_cabin_door_row1_left_is_locked",
+					"COMPARE_SIGNAL_RULE" : "TRUE",
+					"RULE_ID" : "100",
+					"MIN_CONSECUTIVE" : 1,
+					"SETTLING_TIME_MS" : 500
+				},
+				{
+					"SIGNAL" : "vehicle_cabin_door_row1_left_is_locked",
+					"SIGNAL_RULE" : "FALSE",
+					"COMPARE_TOPIC" : "rt/DoorSwitch",
+					"COMPARE_SIGNAL" : "vehicle_sm_cabin_door_row1_left_is_locked",
+					"COMPARE_SIGNAL_RULE" : "FALSE",
+					"RULE_ID" : "100",
+					"MIN_CONSECUTIVE" : 1,
+					"SETTLING_TIME_MS" : 500
+				}
+			]
+		},
+		{
+			"TOPIC_NAME" : "/vehicle/status/door_status",
+			"STATE_TRANSITION_RULE" : [
+				{
+					"RULE_ID" : "ST-DOOR-01",
+					"SIGNAL" : "status",
+					"DESCRIPTION" : "Invalid door state transition (Not in Whitelist)",
+					"THROTTLE_ENABLED" : false,
+					"THROTTLE_MS" : 5000,
+					"SEVERITY" : "high"
+				}
+			]
+		},
+		{
+			"TOPIC_NAME" : "/vehicle/status/gear_status",
+			"STATE_TRANSITION_RULE" : [
+				{
+					"RULE_ID" : "ST-GEAR-01",
+					"SIGNAL" : "report",
+					"DESCRIPTION" : "Moving forward, invalid gear state transition without stop",
+					"CONDITIONS" : [
+						{
+							"COMPARE_TOPIC" : "/vehicle/status/velocity_status",
+							"COMPARE_SIGNAL" : "longitudinal_velocity",
+							"OPERATOR" : ">",
+							"VALUE" : 0.5
+						}
+					],
+					"THROTTLE_ENABLED" : false,
+					"THROTTLE_MS" : 5000,
+					"SEVERITY" : "high"
+				}
+			]
+		},
+		{
+			"TOPIC_NAME" : "/vehicle/status/control_mode",
+			"STATE_TRANSITION_RULE" : [
+				{
+					"RULE_ID" : "ST-CTRL-01",
+					"SIGNAL" : "mode",
+					"DESCRIPTION" : "Invalid control mode transition from NOT_READY to AUTONOMOUS",
+					"THROTTLE_ENABLED" : false,
+					"THROTTLE_MS" : 5000,
+					"SEVERITY" : "high"
+				}
+			]
+		}
+	]
+}

@@ -105,7 +105,7 @@ bool ManagerState::createInputEntities()
     DataReaderQos rqos = DATAREADER_QOS_DEFAULT;
     rqos.reliability().kind = RELIABLE_RELIABILITY_QOS;
     rqos.history().kind = KEEP_LAST_HISTORY_QOS;
-    rqos.history().depth = 1;
+    rqos.history().depth = 500;
 
     for (size_t index = 0; index < topic_count; ++index)
     {
@@ -202,7 +202,7 @@ bool ManagerState::createOutputEntities()
     DataWriterQos wqos = DATAWRITER_QOS_DEFAULT;
     wqos.reliability().kind = RELIABLE_RELIABILITY_QOS;
     wqos.history().kind = KEEP_LAST_HISTORY_QOS;
-    wqos.history().depth = 1;
+    wqos.history().depth = 500;
 
     for (size_t index = 0; index < topic_count; ++index)
     {

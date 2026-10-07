@@ -1,3 +1,10 @@
 # Autoware 차량 제어 메시지 리스트 사양서
-VelocityReport.msg:https://raw.githubusercontent.com/autowarefoundation/autoware_msgs/bb8e7bf5d97168663e0e7b357929e4fcdbd3a967/autoware_vehicle_msgs/msg/VelocityReport.msg
-TurnIndicatorsReport.msg:https://raw.githubusercontent.com/autowarefoundation/autoware_msgs/bb8e7bf5d97168663e0e7b357929e4fcdbd3a967/autoware_vehicle_msgs/msg/TurnIndicatorsReport.msg
+VelocityReport.msg:https://raw.githubusercontent.com/autowarefoundation/autoware_msgs/refs/heads/main/autoware_vehicle_msgs/msg/VelocityReport.msg
+TurnIndicatorsReport.msg:https://raw.githubusercontent.com/autowarefoundation/autoware_msgs/refs/heads/main/autoware_vehicle_msgs/msg/TurnIndicatorsReport.msg
+SteeringReport.msg:https://raw.githubusercontent.com/autowarefoundation/autoware_msgs/refs/heads/main/autoware_vehicle_msgs/msg/SteeringReport.msg
+HazardLightsReport.msg:https://raw.githubusercontent.com/autowarefoundation/autoware_msgs/refs/heads/main/autoware_vehicle_msgs/msg/HazardLightsReport.msg
+GearReport.msg:https://raw.githubusercontent.com/autowarefoundation/autoware_msgs/refs/heads/main/autoware_vehicle_msgs/msg/GearReport.msg
+DoorStatus.msg:https://raw.githubusercontent.com/tier4/tier4_autoware_msgs/refs/heads/tier4/universe/tier4_api_msgs/msg/DoorStatus.msg
+ControlModeReport.msg:https://raw.githubusercontent.com/autowarefoundation/autoware_msgs/refs/heads/main/autoware_vehicle_msgs/msg/ControlModeReport.msg
+ActuationStatus.msg:https://raw.githubusercontent.com/tier4/tier4_autoware_msgs/refs/heads/tier4/universe/tier4_vehicle_msgs/msg/ActuationStatus.msg
+ActuationStatusStamped.msg:https://raw.githubusercontent.com/tier4/tier4_autoware_msgs/refs/heads/tier4/universe/tier4_vehicle_msgs/msg/ActuationStatusStamped.msg

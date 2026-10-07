@@ -187,8 +187,51 @@ int SecurityClientApp::run()
     running_.store(true);
     std::size_t findingCount = 0;
 
+    std::error_code ecInit;
+    auto lastPolicyTime = std::filesystem::last_write_time(launchOptions_.policyConfigPath, ecInit);
+    auto lastRuntimeTime = std::filesystem::last_write_time(launchOptions_.runtimeConfigPath, ecInit);
+    auto lastReloadCheck = std::chrono::steady_clock::now();
+
     while (running_.load())
     {
+        // Periodic hot-reload check (every 1 second)
+        const auto nowTime = std::chrono::steady_clock::now();
+        if (nowTime - lastReloadCheck >= std::chrono::seconds(1))
+        {
+            lastReloadCheck = nowTime;
+            bool changed = false;
+            std::error_code ecPolicy, ecRuntime;
+            auto curPolicyTime = std::filesystem::last_write_time(launchOptions_.policyConfigPath, ecPolicy);
+            auto curRuntimeTime = std::filesystem::last_write_time(launchOptions_.runtimeConfigPath, ecRuntime);
+
+            if (!ecPolicy && curPolicyTime != lastPolicyTime)
+            {
+                lastPolicyTime = curPolicyTime;
+                changed = true;
+            }
+            if (!ecRuntime && curRuntimeTime != lastRuntimeTime)
+            {
+                lastRuntimeTime = curRuntimeTime;
+                changed = true;
+            }
+
+            if (changed)
+            {
+                SecurityClientConfig newConfig;
+                if (configLoader_.load(launchOptions_.runtimeConfigPath, launchOptions_.policyConfigPath, newConfig))
+                {
+                    apply_launch_overrides(launchOptions_, newConfig);
+                    config_ = newConfig;
+                    analysisStage_.configure(config_.analysisDetection, config_.policies);
+                    LOG_INF("Config reloaded successfully");
+                }
+                else
+                {
+                    LOG_WRN("Hot-reload: failed to parse updated config file, keeping previous configuration");
+                }
+            }
+        }
+
         samples.clear();
         if (!collectionStage_.pollOnce(samples))
         {

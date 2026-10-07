@@ -65,6 +65,7 @@ struct SourceConfig
     std::string type;
     CacheConfig cache;
     int domainId {};
+    TopicStateMachine stateMachine;
 };
 
 struct AlertSinkConfig

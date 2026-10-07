@@ -29,9 +29,9 @@ using AC::ddsIds::securityClient::SecurityClientConfigLoader;
 
 TEST(SecurityClientConfigLoaderTest, LoadsRuntimeConfigAndPolicyConfig)
 {
-    std::filesystem::path policyRulePath = std::filesystem::canonical("/proc/self/exe").parent_path();
-    const std::filesystem::path runtimePath = policyRulePath / "runtime_config.json";
-    const std::filesystem::path policyPath = policyRulePath / "policy_config.json";
+    std::filesystem::path policyRulePath = POLICY_RULE_DIR;
+    const std::filesystem::path runtimePath = policyRulePath / "sample_runtime_config.json";
+    const std::filesystem::path policyPath = policyRulePath / "sample_policy_config.json";
 
     SecurityClientConfigLoader loader;
     SecurityClientConfig config;
@@ -42,8 +42,10 @@ TEST(SecurityClientConfigLoaderTest, LoadsRuntimeConfigAndPolicyConfig)
     ASSERT_FALSE(config.collection.sources.empty());
     EXPECT_EQ("rt/DoorSwitch", config.collection.sources.front().topic);
     ASSERT_FALSE(config.policies.signalMismatchRules.empty());
+    EXPECT_EQ("1.1", config.policies.version);
     EXPECT_EQ(100u, config.policies.signalMismatchRules.front().ruleId);
     EXPECT_EQ("rt/DoorUnlockLockIndicator", config.policies.signalMismatchRules.front().topic);
+    EXPECT_EQ(500u, config.policies.signalMismatchRules.front().settlingTimeMs);
 }
 
 TEST(SecurityClientConfigLoaderTest, RejectsMissingRuntimeFile)

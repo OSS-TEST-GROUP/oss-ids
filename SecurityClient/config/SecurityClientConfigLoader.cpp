@@ -156,6 +156,12 @@ bool parse_detector_type(std::string_view value, DetectorType& outType)
         outType = DetectorType::rtps_header_rule;
         return true;
     }
+    if (value == "state_transition_rule" || value == "state-transition-rule" || value == "STATE_TRANSITION_RULE" ||
+        value == "state_transition" || value == "state-transition" || value == "STATE_TRANSITION")
+    {
+        outType = DetectorType::state_transition_rule;
+        return true;
+    }
     return false;
 }
 
@@ -319,6 +325,35 @@ bool SecurityClientConfigLoader::loadRuntimeConfig(const std::filesystem::path& 
                     source.cache.mode = mode;
                     source.cache.ttlMs = parse_int64(*cache, {"ttl_ms", "ttlMs"}, 0LL);
                 }
+
+                if (const auto* sm = find_object(item, {"state_machine", "stateMachine", "STATE_MACHINE"}); sm != nullptr)
+                {
+                    source.stateMachine.topic = source.topic;
+                    source.stateMachine.signal = read_string(*sm, {"signal", "SIGNAL"}, "");
+                    if (const auto* states = find_object(*sm, {"states", "STATES"}); states != nullptr && states->is_object())
+                    {
+                        for (const auto& [name, val] : states->items())
+                        {
+                            int code = val.is_number_integer() ? val.get<int>() : 0;
+                            source.stateMachine.states.push_back({name, code});
+                        }
+                    }
+                    if (const auto* transitions =
+                            find_object(*sm, {"valid_transitions", "validTransitions", "VALID_TRANSITIONS"});
+                        transitions != nullptr && transitions->is_array())
+                    {
+                        for (const auto& trans : *transitions)
+                        {
+                            int from = read_int(trans, {"from", "FROM"}, -1);
+                            int to = read_int(trans, {"to", "TO"}, -1);
+                            if (from >= 0 && to >= 0)
+                            {
+                                source.stateMachine.validTransitions.push_back({from, to});
+                            }
+                        }
+                    }
+                }
+
                 if (source.id.empty() || source.topic.empty())
                 {
                     LOG_ERR("SecurityClientConfigLoader source entry is missing id/topic");
@@ -423,6 +458,7 @@ bool SecurityClientConfigLoader::loadPolicyConfig(const std::filesystem::path& p
     }
 
     config = {};
+    config.version = read_string(root, {"VERSION", "version"}, "1.1");
 
     const auto* hostIds = find_object(root, {"HOST_IDS", "host_ids"});
     if (hostIds != nullptr && hostIds->is_array())
@@ -435,33 +471,80 @@ bool SecurityClientConfigLoader::loadPolicyConfig(const std::filesystem::path& p
                 continue;
             }
 
-            const auto* customRules = find_object(topicRule, {"CUSTOM_RULE", "custom_rule", "customRules"});
-            if (customRules == nullptr || !customRules->is_array())
+            if (const auto* customRules = find_object(topicRule, {"CUSTOM_RULE", "custom_rule", "customRules"});
+                customRules != nullptr && customRules->is_array())
             {
-                continue;
+                for (const auto& item : *customRules)
+                {
+                    SignalMismatchRule rule;
+                    rule.ruleId = parse_uint(item, {"RULE_ID", "rule_id"}, 0);
+                    rule.enabled = read_bool(item, {"enabled", "ENABLED"}, true);
+                    rule.topic = topicName;
+                    rule.signal = read_string(item, {"SIGNAL", "signal"}, "");
+                    rule.signalRule = read_bool(item, {"SIGNAL_RULE", "signal_rule", "signalRule"}, false);
+                    rule.compareTopic = read_string(item, {"COMPARE_TOPIC", "compare_topic", "compareTopic"}, "");
+                    rule.compareSignal = read_string(item, {"COMPARE_SIGNAL", "compare_signal", "compareSignal"}, "");
+                    rule.compareSignalRule =
+                        read_bool(item, {"COMPARE_SIGNAL_RULE", "compare_signal_rule", "compareSignalRule"}, false);
+                    const auto severityText = read_string(item, {"severity", "SEVERITY"}, "medium");
+                    Severity severity {Severity::medium};
+                    if (!parse_severity(severityText, severity))
+                    {
+                        LOG_ERR("SecurityClientConfigLoader unknown severity '{}'", severityText);
+                        return false;
+                    }
+                    rule.severity = severity;
+                    rule.minConsecutive = parse_uint(item, {"MIN_CONSECUTIVE", "min_consecutive", "CONSECUTIVE_COUNT"}, 1);
+                    rule.settlingTimeMs = parse_uint(item, {"SETTLING_TIME_MS", "settling_time_ms", "settlingTimeMs"}, 0);
+                    config.signalMismatchRules.push_back(rule);
+                }
             }
 
-            for (const auto& item : *customRules)
+            if (const auto* stateRules =
+                    find_object(topicRule, {"STATE_TRANSITION_RULE", "state_transition_rule", "stateTransitionRules"});
+                stateRules != nullptr && stateRules->is_array())
             {
-                SignalMismatchRule rule;
-                rule.ruleId = parse_uint(item, {"RULE_ID", "rule_id"}, 0);
-                rule.enabled = read_bool(item, {"enabled", "ENABLED"}, true);
-                rule.topic = topicName;
-                rule.signal = read_string(item, {"SIGNAL", "signal"}, "");
-                rule.signalRule = read_bool(item, {"SIGNAL_RULE", "signal_rule", "signalRule"}, false);
-                rule.compareTopic = read_string(item, {"COMPARE_TOPIC", "compare_topic", "compareTopic"}, "");
-                rule.compareSignal = read_string(item, {"COMPARE_SIGNAL", "compare_signal", "compareSignal"}, "");
-                rule.compareSignalRule =
-                    read_bool(item, {"COMPARE_SIGNAL_RULE", "compare_signal_rule", "compareSignalRule"}, false);
-                const auto severityText = read_string(item, {"severity", "SEVERITY"}, "medium");
-                Severity severity {Severity::medium};
-                if (!parse_severity(severityText, severity))
+                for (const auto& item : *stateRules)
                 {
-                    LOG_ERR("SecurityClientConfigLoader unknown severity '{}'", severityText);
-                    return false;
+                    StateTransitionRule rule;
+                    rule.ruleId = read_string(item, {"RULE_ID", "rule_id", "ruleId"}, "");
+                    rule.enabled = read_bool(item, {"enabled", "ENABLED"}, true);
+                    rule.topic = topicName;
+                    rule.signal = read_string(item, {"SIGNAL", "signal"}, "");
+                    rule.description = read_string(item, {"DESCRIPTION", "description"}, "");
+                    rule.throttleEnabled =
+                        read_bool(item, {"THROTTLE_ENABLED", "throttle_enabled", "throttleEnabled"}, false);
+                    rule.throttleMs = parse_int64(item, {"THROTTLE_MS", "throttle_ms", "throttleMs"}, 5000LL);
+
+                    const auto severityText = read_string(item, {"severity", "SEVERITY"}, "high");
+                    Severity severity {Severity::high};
+                    if (parse_severity(severityText, severity))
+                    {
+                        rule.severity = severity;
+                    }
+
+                    if (const auto* conds = find_object(item, {"CONDITIONS", "conditions"});
+                        conds != nullptr && conds->is_array())
+                    {
+                        for (const auto& citem : *conds)
+                        {
+                            StateTransitionCondition cond;
+                            cond.compareTopic = read_string(citem, {"COMPARE_TOPIC", "compare_topic"}, "");
+                            cond.compareSignal = read_string(citem, {"COMPARE_SIGNAL", "compare_signal"}, "");
+                            cond.op = read_string(citem, {"OPERATOR", "operator", "op"}, ">");
+                            if (citem.contains("VALUE") || citem.contains("value"))
+                            {
+                                const auto& v = citem.contains("VALUE") ? citem["VALUE"] : citem["value"];
+                                if (v.is_number())
+                                {
+                                    cond.value = v.get<double>();
+                                }
+                            }
+                            rule.conditions.push_back(cond);
+                        }
+                    }
+                    config.stateTransitionRules.push_back(rule);
                 }
-                rule.severity = severity;
-                config.signalMismatchRules.push_back(rule);
             }
         }
     }
@@ -565,6 +648,16 @@ bool SecurityClientConfigLoader::load(const std::filesystem::path& runtimePath, 
     config.policies = policyConfig;
     LOG_INF("SecurityClientConfigLoader merged {} sink(s) and {} rule(s)",
             runtimeConfig.alertResponse.alertSinks.size(), policyConfig.signalMismatchRules.size());
+    for (const auto& src : runtimeConfig.collection.sources)
+    {
+        if (!src.stateMachine.topic.empty() && !src.stateMachine.validTransitions.empty())
+        {
+            config.policies.stateMachines.push_back(src.stateMachine);
+        }
+    }
+    LOG_INF("SecurityClientConfigLoader merged {} sink(s), {} mismatch rule(s), {} state rule(s), {} state machine(s)",
+            runtimeConfig.alertResponse.alertSinks.size(), policyConfig.signalMismatchRules.size(),
+            policyConfig.stateTransitionRules.size(), config.policies.stateMachines.size());
     return true;
 }
 
