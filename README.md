@@ -173,6 +173,20 @@ unset CR_PAT
 IMAGE_ARCH="$(arch=$(uname -m); case "$arch" in x86_64) echo amd64 ;; aarch64|arm64) echo arm64 ;; *) echo "$arch" ;; esac)" docker compose pull
 ```
 - 도커 서비스 up
+만약 domain id 를 수정해야 한다면, SECURITY_CLIENT_DOMAIN_ID... 를 적절히 수정하여 다음 docker compose 명령을 실행한다.
+```bash
+(.venv) show4682@pdev:~/working/oss-ids/docker$ cat .env
+# Default image destination and architecture generated from the active CMake build.
+REGISTRY=ghcr.io
+IMAGE_NAMESPACE=oss-test-group/oss-ids
+IMAGE_TAG=latest
+IMAGE_ARCH=amd64
+
+# DDS Domain IDs
+SECURITY_CLIENT_DOMAIN_ID=0
+SECURITY_MANAGER_SOURCE_DOMAIN_ID=0
+SECURITY_MANAGER_DEST_DOMAIN_ID=0
+```
 ```bash
 IMAGE_ARCH="$(arch=$(uname -m); case "$arch" in x86_64) echo amd64 ;; aarch64|arm64) echo arm64 ;; *) echo "$arch" ;; esac)" docker compose up -d
 ```

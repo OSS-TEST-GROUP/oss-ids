@@ -4,6 +4,10 @@ services:
     platform: linux/${IMAGE_ARCH}
     container_name: security_processor
     restart: unless-stopped
+    environment:
+      - SECURITY_CLIENT_DOMAIN_ID=${SECURITY_CLIENT_DOMAIN_ID:-0}
+      - SECURITY_MANAGER_SOURCE_DOMAIN_ID=${SECURITY_MANAGER_SOURCE_DOMAIN_ID:-0}
+      - SECURITY_MANAGER_DEST_DOMAIN_ID=${SECURITY_MANAGER_DEST_DOMAIN_ID:-0}
     network_mode: host
     ipc: host
 
