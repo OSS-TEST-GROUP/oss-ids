@@ -1,5 +1,24 @@
 # Release Notes
 
+## v0.2.0
+
+상태 전이 위반 탐지기(`StateTransitionViolationDetector`) 추가, 신호 불일치 탐지기의 과도기 오탐 방지 메커니즘 도입, 정책 규칙 모델 확장 등이 개선되었습니다.
+
+### 주요 기능
+
+- **상태 전이 위반 탐지기(`StateTransitionViolationDetector`) 추가**
+  - 차량 도어 상태, 기어 모드, 제어 모드 등 시계열 이벤트에 대해 허용되지 않거나 비정상적인 상태 전이를 탐지하는 기능(`STATE_TRANSITION_RULE`) 제공
+  - 토픽별 상태 머신 추적 및 연계 신호 조건(속도 등)에 따른 전이 위반 판정 지원
+  - 정책 레지스트리(`PolicyRegistry`) 및 단계형 분석 파이프라인(`AnalysisDetectionStage`) 연계
+- **신호 간 불일치 탐지기(`SignalMismatchDetector`) 과도기 오탐 방지 및 안정화**
+  - 상태 전환(토글) 시 신호 전파 지연으로 인한 일시적인 불일치를 무시하는 안정화 시간(`SETTLING_TIME_MS`, 기본 500ms 유예) 메커니즘 지원
+  - `ObservationStore`에 토픽별 상태 변경 시점(`lastStateChangeTimestampMs`) 추적 로직 추가
+  - 비교 조건 불일치 시 규칙 평가 건너뛰기 처리 및 최소 연속 탐지 횟수(`MIN_CONSECUTIVE`) 기반 경합 방지 로직 개선
+- **정책 설정 모델(`PolicyConfig`) 확장 및 버전 관리**
+  - 정책 설정 파일 버전(`VERSION 1.1`) 지원
+  - 상태 전이 규칙(`StateTransitionViolationRule`) 및 안정화 시간(`settlingTimeMs`) 설정 구조 확장
+
+
 ## v0.1.0
 
 DDS 환경에서 데이터를 수집하고 보안 정책을 적용해 탐지 결과를 전달하는 OSS-IDS의 첫 번째 릴리즈입니다.
