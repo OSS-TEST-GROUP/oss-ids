@@ -172,8 +172,10 @@ unset CR_PAT
 ```bash
 IMAGE_ARCH="$(arch=$(uname -m); case "$arch" in x86_64) echo amd64 ;; aarch64|arm64) echo arm64 ;; *) echo "$arch" ;; esac)" docker compose pull
 ```
-- 도커 서비스 up
-만약 domain id 를 수정해야 한다면, SECURITY_CLIENT_DOMAIN_ID... 를 적절히 수정하여 다음 docker compose 명령을 실행한다.
+- 도커 서비스 up <br>
+만약 domain id 를 수정해야 한다면, 아래 SECURITY_CLIENT_DOMAIN_ID... 를 적절히 수정하여 다음 docker compose 명령을 실행한다.<br>
+SECURITY_MANAGER_SOURCE_DOMAIN_ID, SECURITY_CLIENT_DOMAIN_ID 와 같은 domain id 를 사용해야 이벤트를 공유할 수 있다.<br>
+SECURITY_MANAGER_DEST_DOMAIN_ID 는 탐지로그를 publish 할 domain id 를 설정할 수 있다.
 ```bash
 (.venv) show4682@pdev:~/working/oss-ids/docker$ cat .env
 # Default image destination and architecture generated from the active CMake build.
@@ -187,6 +189,7 @@ SECURITY_CLIENT_DOMAIN_ID=0
 SECURITY_MANAGER_SOURCE_DOMAIN_ID=0
 SECURITY_MANAGER_DEST_DOMAIN_ID=0
 ```
+아래를 실행하여 docker 서비스들을 실행시킨다.
 ```bash
 IMAGE_ARCH="$(arch=$(uname -m); case "$arch" in x86_64) echo amd64 ;; aarch64|arm64) echo arm64 ;; *) echo "$arch" ;; esac)" docker compose up -d
 ```
@@ -195,4 +198,12 @@ IMAGE_ARCH="$(arch=$(uname -m); case "$arch" in x86_64) echo amd64 ;; aarch64|ar
 IMAGE_ARCH="$(arch=$(uname -m); case "$arch" in x86_64) echo amd64 ;; aarch64|arm64) echo arm64 ;; *) echo "$arch" ;; esac)" docker compose up -d security_processor
 ```
 - 브라우저에서 http://host-ip:48080 접속
-![oss-ids monitor 화면](assets/oss-ids-mon.png)
+- Legacy Monitoring
+![oss-ids legacy monitor 화면](assets/oss-ids-mon.png)
+- K-Autoware Monitoring <br>
+신규룰을 테스트 해 볼 수 있는 탭 화면
+![oss-ids K-Autoware monitor 화면1](assets/brand_new_rule1.png)
+신규를 테스트 방법
+![oss-ids K-Autoware monitor 화면2](assets/brand_new_rule2.png)
+탐지로그 확인 방법
+![oss-ids K-Autoware monitor 화면3](assets/brand_new_rule3.png)
